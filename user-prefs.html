@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/user-prefs.css">
+    <title>User Prefs</title>
+</head>
+<body>
+    <section>
+        <nav>
+            <a href="user-prefs.html">User-prefs</a><span> |</span>
+            <a href="map.html">Place Keeper</a>
+        </nav>
+    </section>
+    <section>
+        <header>
+            <h1>User Preferences</h1>
+        </header>
+    </section>
+    <section>
+        <main>
+            <form onsubmit="onSubmit(event)">
+                <label for="bgc-color">Desired background color</label>
+                <input type="color" name="bgc-color">
+                <label for="text-color">Desired text color</label>
+                <input type="color" name="text-color">
+                <label for="date-pick">Please set your exact birthday date</label>
+                <input type="date" name="birthday-date" required>
+                <label for="Email">Email</label>
+                <input type="email" name="email" required>
+                <label for="age">Your age</label>
+                <input type="range" name="age" min="18" max="120" value="25" onchange="showAge(this.value)">
+                <span class="show-age">25</span>
+                <button>Save</button>
+            </form>
+        </main>
+    </section>
+    <script src="js/userPref-controller.js"></script>
+    <script src="js/userPref-service.js"></script>
+    <script src="js/util-service.js"></script>
+</body>
+</html>

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css"
+        integrity="sha384-DyZ88mC6Up2uqS4h/KRgHuoeGwBcD4Ng9SiP4dIRy0EXTlnuz47vAwmeGwVChigm" crossorigin="anonymous">
+    <link rel="stylesheet" href="css/map.css">
+    <title>Map</title>
+</head>
+
+<body>
+    <section>
+        <nav>
+            <a href="user-prefs.html">User-prefs</a><span> |</span>
+            <a href="index.html">Homepage</a>
+        </nav>
+    </section>
+    <section>
+        <header>
+            <h1>Place Keeper<span></span></h1>
+            <img src="./img/place-marker.gif" alt="marker-image" class="marker-img">
+        </header>
+    </section>
+    <section>
+        <aside hidden>
+            <label for="place-name">Choose a name for this place</label>
+            <input type="text" name="place-name"" placeholder=" Enter a name">
+            <button class="save-btn" onclick="onSavePlace()">Save</button>
+        </aside>
+    </section>
+    <section>
+        <main>
+            <div class="map"></div>
+            <div class="places-list"></div>
+        </main>
+    </section>
+    <footer><a href="https://icons8.com/icon/13778/place-marker">Place Marker icon by Icons8</a></footer>
+    <script src="js/place-controller.js"></script>
+    <script src="js/place-service.js"></script>
+    <script src="js/util-service.js"></script>
+    <script type="text/javascript" src="https://unpkg.com/default-passive-events"></script>
+    <script async
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCyNkWu_YTdG3oFfbSkLa4euUbPhIR7LL4&region=IL&libraries=places&callback=initMap"></script>
+</body>
+
+</html>
