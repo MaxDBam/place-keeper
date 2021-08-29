@@ -31,7 +31,11 @@ h1 {
 
 aside {
     text-align: center;
-    margin-block-start: 1rem;
+    margin: 1rem auto auto auto;
+    opacity: 0.7;
+    background-color: lightgray;
+    width: 26rem;
+    padding: 1rem;
 }
 
 .save-btn:hover {
@@ -140,7 +144,7 @@ main {
 }
 
 footer {
-    margin-block-start: 16rem;
+    margin-block-start: 5.8rem;
     text-align: center;
 }
 
