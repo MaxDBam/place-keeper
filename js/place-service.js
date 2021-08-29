@@ -4,6 +4,7 @@ const gLat = 29.5577;
 const gLng = 34.9519;
 
 var gPlaces;
+var gMarkersArray = [];
 const KEY = 'places';
 
 function getEilatCoords() {
@@ -39,10 +40,28 @@ function createPlace(name, street, location) {
     };
 }
 
+function addMarker(markerToPush) {
+    gMarkersArray.push(markerToPush);
+}
+
+function getPlaceIdForMarker(placeLoc) {
+    const markerId = gPlaces.find(place => (place.lat === placeLoc.lat && place.lng === placeLoc.lng)); 
+    return markerId.id;
+}
+
+function getPlaceIdxForMarker(placeId) {
+    const markerIdx = gMarkersArray.findIndex(place => placeId === place.id);
+    return markerIdx;
+}
+
 function removePlace(placeId) {
     const placeIdx = gPlaces.findIndex(place => placeId === place.id);
     gPlaces.splice(placeIdx, 1);
     savePlacesToStorage();
+}
+
+function removeMarker(idx) {
+    gMarkersArray.splice(idx, 1);
 }
 
 function savePlacesToStorage() {
@@ -51,4 +70,8 @@ function savePlacesToStorage() {
 
 function getPlaces() {
     return gPlaces;
+}
+
+function getMarkersArray() {
+    return gMarkersArray;
 }
