@@ -1,5 +1,7 @@
 'use strict';
 
+var gMap, geocoder, infoWindow, gMapListener;
+
 function initMap() {
     createPlaces();
     let elMap = document.querySelector('.map');
@@ -9,24 +11,24 @@ function initMap() {
         zoom: 15,
         disableDefaultUI: true
     };
-    const map = new google.maps.Map(
+    gMap = new google.maps.Map(
         elMap,
         options,
     );
-    const geocoder = new google.maps.Geocoder();
-    const infoWindow = new google.maps.InfoWindow();
-    map.addListener('click', (e) => {
-        placeMarkerAndPanTo(e.latLng, map, geocoder, infoWindow);
-        onMapClick();
-    }, {passive: true});
+    geocoder = getGeoCoder();
+    infoWindow = getinfoWindow();
+    gMapListener = gMap.addListener('click', (e) => {
+            placeMarkerAndPanTo(e.latLng, gMap, geocoder, infoWindow);
+            onMapClick();
+    }, { passive: true });
+
     const locationButton = document.createElement('button');
-    locationButton.innerHTML = '<img class="locate-img" src="./img/location.png"></img>';
-    locationButton.classList.add('locate-button');
-    map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(locationButton);
-    locationButton.addEventListener('click', () => {
-        onLocate(map, infoWindow);
-    },{passive: true});
+    let lBtn = new onLocateUser(locationButton);
+    locationButton.index = 1;
+    gMap.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(locationButton);
+    
     renderPlaces();
+    renderMarkers();
 }
 
 function handleLocationError(browserHasGeolocation, infoWindow, pos) {
@@ -41,11 +43,22 @@ function handleLocationError(browserHasGeolocation, infoWindow, pos) {
 
 function onMapClick() {
     document.querySelector('aside').hidden = false;
+    document.querySelector('input').focus();
+    google.maps.event.removeListener(gMapListener);
+}
+
+function onLocateUser(locationButton) {
+    locationButton.innerHTML = '<img class="locate-img" src="./img/location.png"></img>';
+    locationButton.classList.add('locate-button');
+    locationButton.addEventListener('click', () => {
+        onLocate(gMap, infoWindow);
+    });
 }
 
 function onSavePlace(street, lat, lng) {
     const elInputName = document.querySelector('input[name="place-name"]');
     const name = elInputName.value;
+    var placeId;
     const location = {
         lat,
         lng
@@ -54,67 +67,96 @@ function onSavePlace(street, lat, lng) {
         return;
     } else {
         addPlace(name, street, location);
+        placeId = getPlaceIdForMarker(location);
+        onAddMarker(location, placeId, name);
+        setMapOnAll(gMap);
     }
     document.querySelector('aside').hidden = true;
+    gMapListener = gMap.addListener('click', (e) => {
+            placeMarkerAndPanTo(e.latLng, gMap, geocoder, infoWindow);
+            onMapClick();
+        });
+        
     renderPlaces();
     elInputName.value = '';
 }
 
-function onRemovePlace(placeId) {
-    removePlace(placeId);
-    renderPlaces();
+function getGeoCoder() {
+    return new google.maps.Geocoder();
 }
 
-function onLocate(map, infoWindow) {
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                const pos = {
-                    lat: position.coords.latitude,
-                    lng: position.coords.longitude
-                };
-                infoWindow.setPosition(pos);
-                infoWindow.setContent('Your location');
-                infoWindow.open(map);
-                map.setCenter(pos);
-            },
-            () => {
-                handleLocationError(true, infoWindow, map.getCenter());
-            }
-        );
+function getinfoWindow() {
+    return new google.maps.InfoWindow();
+}
+
+function onRemovePlace(placeId) {
+    var placeIdx = getPlaceIdxForMarker(placeId);
+    if (!getMarkersArray().length || placeIdx < 0) {
+        removePlace(placeId);
+        renderPlaces();
     } else {
-        handleLocationError(false, infoWindow, map.getCenter());
+        removePlace(placeId);
+        onRemoveMarker(placeIdx);
+        renderPlaces();
     }
 }
 
+function onLocate(map, infoWindow) {;
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(getPosition, handleLocationError, { maximumAge: 10 });
+        } else {
+            handleLocationError(false, infoWindow, map.getCenter());
+        }
+}
+
+function getPosition(position) {
+    const pos = {
+        lat: position.coords.latitude,
+        lng: position.coords.longitude
+    };
+    // infoWindow.setPosition(pos);
+    infoWindow.setContent('Your location');
+    infoWindow.open(gMap);
+    gMap.setCenter(pos);
+    gMap.setZoom(15);
+}
+
 function geocodeLatLng(location, geocoder, map, infoWindow) {
-    let result = {};
+    var result = {};
     const latLng = location;
+    const elSaveBtn = document.querySelector('button.save-btn');
     geocoder
         .geocode({ location: latLng }, function (results, status) {
             if (status == 'OK') {
-                map.setZoom(11);
-                const marker = new google.maps.Marker({
-                    position: latLng,
-                    map: map,
-                });
+                map.setZoom(15);
                 onMapClick();
-                result['lat'] = results[0].geometry.location.lat(); 
-                result['lng'] = results[0].geometry.location.lng(); 
-                result['street'] = results[0].formatted_address; 
+                result['lat'] = results[0].geometry.location.lat();
+                result['lng'] = results[0].geometry.location.lng();
+                result['street'] = results[0].formatted_address;
                 infoWindow.setContent(results[0].formatted_address);
-                infoWindow.open(map, marker);
+                infoWindow.open(map);
             } else {
                 window.alert("No results found");
             }
         })
         .catch((e) => window.alert("Geocoder failed due to: " + e));
 
-    document.querySelector('button.save-btn').addEventListener('click', () => {
+    elSaveBtn.addEventListener('click', () => {
         onSavePlace(result.street, result.lat, result.lng);
         renderPlaces();
         result = {};
-    }, {passive: true});
+    }, { passive: true });
+    onClickEnter();
+}
+
+function onClickEnter() {
+    const elSaveBtn = document.querySelector('button.save-btn');
+    const elAside = document.querySelector('aside');
+    elAside.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            elSaveBtn.click();
+    }
+});
 }
 
 function renderPlaces() {
@@ -136,10 +178,41 @@ function renderPlaces() {
 }
 
 function placeMarkerAndPanTo(latLng, map, gc, infoWindow) {
-    new google.maps.Marker({
+    const marker = new google.maps.Marker({
         position: latLng,
-        map: map,
     });
     map.panTo(latLng);
     geocodeLatLng(latLng, gc, map, infoWindow);
+}
+
+function onAddMarker(position, id, name) {
+    const marker = new google.maps.Marker({ position, id, gMap, title: name });
+    addMarker(marker);
+}
+
+function setMapOnAll(map) {
+    for (let i = 0; i < getMarkersArray().length; i++) {
+        getMarkersArray()[i].setMap(map);
+    }
+}
+
+function renderMarkers() {
+    const markers = getPlaces();
+    markers.forEach(place => {
+        const marker = new google.maps.Marker({
+            id: place.id,
+            position: {
+                lat: place.lat,
+                lng: place.lng,
+            },
+            title: place.name,
+            map: gMap
+        });
+        getMarkersArray().push(marker);
+    });
+}
+
+function onRemoveMarker(idx) {
+    getMarkersArray()[idx].setMap(null);
+    removeMarker(idx);
 }
